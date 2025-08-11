@@ -2,8 +2,8 @@
 
 <div align="center">
 
-![GitHub stars](https://img.shields.io/github/stars/ozthepenguin/youtube-stream-tool?style=for-the-badge&color=gold)
-![GitHub forks](https://img.shields.io/github/forks/ozthepenguin/youtube-stream-tool?style=for-the-badge&color=blue)
+![GitHub stars](https://img.shields.io/github/stars/orca-thekillerwhale/youtube-stream-tool?style=for-the-badge&color=gold)
+![GitHub forks](https://img.shields.io/github/forks/orca-thekillerwhale/youtube-stream-tool?style=for-the-badge&color=blue)
 ![License](https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/platform-Linux-lightgrey.svg?style=for-the-badge)
 
@@ -77,7 +77,7 @@ Before using this tool, ensure you have the following dependencies installed:
 
 ```bash
 # Clone the repository
-git clone https://github.com/ozthepenguin/youtube-stream-tool.git
+git clone https://github.com/orca-thekillerwhale/youtube-stream-tool.git
 cd youtube-stream-tool
 
 # Make the script executable
@@ -91,7 +91,7 @@ sudo ln -s $(pwd)/youtube-stream.sh /usr/local/bin/youtube-stream
 
 ```bash
 # Download the script directly
-wget https://raw.githubusercontent.com/ozthepenguin/youtube-stream-tool/main/youtube-stream.sh
+wget https://raw.githubusercontent.com/orca-thekillerwhale/youtube-stream-tool/main/youtube-stream.sh
 
 # Make it executable
 chmod +x youtube-stream.sh
@@ -197,12 +197,12 @@ Automatic fallback through multiple YouTube clients:
 We welcome contributions! Here's how you can help:
 
 ### 🐛 Bug Reports
-- Use the [issue tracker](https://github.com/ozthepenguin/youtube-stream-tool/issues)
+- Use the [issue tracker](https://github.com/orca-thekillerwhale/youtube-stream-tool/issues)
 - Include script output and error messages
 - Specify your Linux distribution and versions
 
 ### 💡 Feature Requests
-- Check existing [feature requests](https://github.com/ozthepenguin/youtube-stream-tool/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
+- Check existing [feature requests](https://github.com/orca-thekillerwhale/youtube-stream-tool/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
 - Describe your use case clearly
 - Consider submitting a pull request!
 
@@ -210,7 +210,7 @@ We welcome contributions! Here's how you can help:
 
 ```bash
 # Fork the repository and clone your fork
-git clone https://github.com/ozthepenguin/youtube-stream-tool.git
+git clone https://github.com/orca-thekillerwhale/youtube-stream-tool.git
 cd youtube-stream-tool
 
 # Create a feature branch
@@ -239,10 +239,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
 
-![GitHub repo size](https://img.shields.io/github/repo-size/ozthepenguin/youtube-stream-tool?style=flat-square)
-![GitHub code size](https://img.shields.io/github/languages/code-size/ozthepenguin/youtube-stream-tool?style=flat-square)
-![GitHub issues](https://img.shields.io/github/issues/ozthepenguin/youtube-stream-tool?style=flat-square)
-![GitHub last commit](https://img.shields.io/github/last-commit/ozthepenguin/youtube-stream-tool?style=flat-square)
+![GitHub repo size](https://img.shields.io/github/repo-size/orca-thekillerwhale/youtube-stream-tool?style=flat-square)
+![GitHub code size](https://img.shields.io/github/languages/code-size/orca-thekillerwhale/youtube-stream-tool?style=flat-square)
+![GitHub issues](https://img.shields.io/github/issues/orca-thekillerwhale/youtube-stream-tool?style=flat-square)
+![GitHub last commit](https://img.shields.io/github/last-commit/orca-thekillerwhale/youtube-stream-tool?style=flat-square)
 
 </div>
 
