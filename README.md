@@ -67,9 +67,9 @@ Before using this tool, ensure you have the following dependencies installed:
 | Dependency | Purpose | Installation |
 |------------|---------|-------------|
 | 🎥 **yt-dlp** | YouTube video extraction |  Python `pip install yt-dlp` Ubuntu/Debian `sudo apt install yt-dlp` Arch `sudo pacman -S yt-dlp` |
-| 📺 **mpv** | Video player | `sudo apt install mpv` |
-| 🔍 **fzf** | Interactive selection | `sudo apt install fzf` |
-| 🎬 **ffmpeg** | Media processing | `sudo apt install ffmpeg` |
+| 📺 **mpv** | Video player | Ubuntu/Debian`sudo apt install mpv` Arch `sudo pacman -S mpv` |
+| 🔍 **fzf** | Interactive selection | Ubuntu/Debian `sudo apt install fzf` Arch `sudo pacman -S fzf` |
+| 🎬 **ffmpeg** | Media processing | Ubuntu/Debian`sudo apt install ffmpeg` sudo pacman -S ffmpeg |
 
 ## 🚀 Installation
 
