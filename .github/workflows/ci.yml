@@ -1,0 +1,87 @@
+name: 🧪 CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: 🔍 Code Quality & Testing
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🛠️ Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y shellcheck mpv ffmpeg fzf python3-pip
+        pip3 install yt-dlp
+        
+    - name: 🔍 Run ShellCheck
+      run: shellcheck youtube-stream.sh
+      
+    - name: 🧪 Test script syntax
+      run: bash -n youtube-stream.sh
+      
+    - name: 📋 Verify dependencies
+      run: |
+        which yt-dlp
+        which mpv
+        which fzf
+        which ffmpeg
+        
+    - name: 🎬 Test script help
+      run: ./youtube-stream.sh --help || true
+      
+  release:
+    name: 🚀 Create Release
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🏷️ Generate tag
+      id: tag
+      run: |
+        TAG_NAME="v$(date +'%Y.%m.%d')-$(git rev-parse --short HEAD)"
+        echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+        
+    - name: 📦 Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.tag.outputs.tag }}
+        release_name: 🎬 YouTube Stream Tool ${{ steps.tag.outputs.tag }}
+        body: |
+          ## 🎉 What's New
+          
+          Automated release of YouTube Stream Tool
+          
+          ### ✨ Features
+          - Interactive quality selection with fzf
+          - Multiple client fallbacks for YouTube API
+          - Smart audio handling for video-only formats
+          - Automatic fallback when formats fail
+          - Hardware-accelerated MPV playback
+          
+          ### 🛠️ Installation
+          ```bash
+          wget https://github.com/luka-magnotta-what/youtube-stream-tool/releases/download/${{ steps.tag.outputs.tag }}/youtube-stream.sh
+          chmod +x youtube-stream.sh
+          ```
+          
+          ### 📋 Requirements
+          - yt-dlp
+          - mpv
+          - fzf  
+          - ffmpeg
+        draft: false
+        prerelease: false
