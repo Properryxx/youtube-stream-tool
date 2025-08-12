@@ -111,28 +111,45 @@ if [ "$#" -eq 0 ]; then
     
     # Format videos for selection
     formatted_videos=""
-    while IFS='|' read -r title video_id uploader; do
-        if [ -n "$title" ] && [ -n "$video_id" ]; then
-            formatted_videos="$formatted_videos\n$title | $uploader | https://youtu.be/$video_id"
+    while IFS= read -r line; do
+        if [ -n "$line" ]; then
+            # Split only on the last two | characters to handle titles with pipes
+            # Extract video_id (second to last field)
+            video_id=$(echo "$line" | rev | cut -d'|' -f2 | rev)
+            # Extract uploader (last field)
+            uploader=$(echo "$line" | rev | cut -d'|' -f1 | rev)
+            # Extract title (everything except the last two fields)
+            title=$(echo "$line" | rev | cut -d'|' -f3- | rev)
+            
+            if [ -n "$title" ] && [ -n "$video_id" ]; then
+                formatted_videos="$formatted_videos\n$title | $uploader | https://youtu.be/$video_id"
+            fi
         fi
     done <<< "$videos"
     
     # Use fzf to select video
-    selected_video=$(echo -e "$formatted_videos" | 
-        fzf --height 70% \
-            --reverse \
-            --header "Select a video from YouTube homepage:" \
-            --preview "echo 'Video: {1}\nUploader: {2}\nURL: {3}'" \
-            --preview-window=down:3:wrap \
-            --delimiter=" | ")
+    if [ -t 0 ] && [ -t 1 ]; then
+        # Interactive mode - use fzf
+        selected_video=$(echo -e "$formatted_videos" | 
+            fzf --height 70% \
+                --reverse \
+                --header "Select a video from YouTube homepage:" \
+                --preview "echo 'Video: {1}\nUploader: {2}\nURL: {3}'" \
+                --preview-window=down:3:wrap \
+                --delimiter=" | ")
+    else
+        # Non-interactive mode - select first video
+        echo "Non-interactive mode detected. Selecting first video..."
+        selected_video=$(echo -e "$formatted_videos" | head -2 | tail -1)
+    fi
     
     if [ -z "$selected_video" ]; then
         echo "No video selected. Exiting."
         exit 0
     fi
     
-    # Extract URL from selection
-    video_url=$(echo "$selected_video" | awk -F' | ' '{print $3}')
+    # Extract URL from selection (last field after the last | separator)
+    video_url=$(echo "$selected_video" | rev | cut -d'|' -f1 | rev | sed 's/^ *//')
     echo "Selected: $video_url"
 elif [ "$#" -eq 1 ]; then
     video_url="$1"
@@ -273,13 +290,20 @@ special_options="AUTO best      auto         -        -        auto         (bes
 all_options="$special_options\n$header\n$formats"
 
 # Use fzf to select video quality with better preview
-selected_format=$(echo -e "$all_options" | 
-    fzf --height 70% \
-        --reverse \
-        --header "Select video quality (Note: High-res video-only formats may not work due to YouTube restrictions):" \
-        --header-lines=3 \
-        --preview "echo 'Selected format details: {}'" \
-        --preview-window=down:3:wrap)
+if [ -t 0 ] && [ -t 1 ]; then
+    # Interactive mode - use fzf
+    selected_format=$(echo -e "$all_options" | 
+        fzf --height 70% \
+            --reverse \
+            --header "Select video quality (Note: High-res video-only formats may not work due to YouTube restrictions):" \
+            --header-lines=3 \
+            --preview "echo 'Selected format details: {}'" \
+            --preview-window=down:3:wrap)
+else
+    # Non-interactive mode - select AUTO (best quality)
+    echo "Non-interactive mode detected. Selecting AUTO (best quality)..."
+    selected_format="AUTO best      auto         -        -        auto         (best available quality)"
+fi
 
 if [ -n "$selected_format" ] && [ "$selected_format" != "$header" ]; then
     # Extract format ID (first column)
