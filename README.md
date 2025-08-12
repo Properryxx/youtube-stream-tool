@@ -130,12 +130,12 @@ youtube-stream "https://www.youtube.com/watch?v=VIDEO_ID"
 # The script will present an interactive menu like this:
 # ┌─ Select video quality ─────────────────────────────────┐
 # │ > AUTO best (best available quality)                   │
-# │   BEST best[height<=1080] (1080p-max with audio)      │
+# │   BEST best[height<=1080] (1080p-max with audio)       │
 # │   ──────────────────────────────────────────────────   │
 # │   251  webm  audio only                                │
-# │   396  mp4   426x240    30fps  av01  video-only       │
-# │   397  mp4   640x360    30fps  av01  video-only       │
-# │   298  mp4   1280x720   60fps  h264  video-only       │
+# │   396  mp4   426x240    30fps  av01  video-only        │
+# │   397  mp4   640x360    30fps  av01  video-only        │
+# │   298  mp4   1280x720   60fps  h264  video-only        │
 # └────────────────────────────────────────────────────────┘
 ```
 
