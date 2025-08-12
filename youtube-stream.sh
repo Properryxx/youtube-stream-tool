@@ -194,7 +194,7 @@ formats=$(yt-dlp --list-formats --no-warnings $cookie_args "$video_url" 2>/dev/n
 
 if [ -z "$formats" ]; then
     echo "Could not fetch video formats. Playing with default quality..."
-    mpv "$video_url"
+    mpv --ao=pipewire --volume=80 "$video_url"
     exit 0
 fi
 
@@ -222,11 +222,11 @@ if [ -n "$selected_format" ] && [ "$selected_format" != "$header" ]; then
     # Handle special options
     if [ "$format_id" = "AUTO" ]; then
         echo "Using best available quality (automatic selection)..."
-        mpv --hwdec=no --vo=gpu --gpu-api=opengl "$video_url"
+        mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 "$video_url"
         exit 0
     elif [ "$format_id" = "BEST" ]; then
         echo "Using best available quality up to 1080p with audio..."
-        mpv --hwdec=no --vo=gpu --gpu-api=opengl --ytdl-format="best[height<=1080]" "$video_url"
+        mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 --ytdl-format="best[height<=1080]" "$video_url"
         exit 0
     fi
     
@@ -242,7 +242,7 @@ if [ -n "$selected_format" ] && [ "$selected_format" != "$header" ]; then
         # Verify the format works before playing
         if yt-dlp --no-warnings $cookie_args -f "$format_spec" --get-url "$video_url" >/dev/null 2>&1; then
             echo "Format combination successful. Starting playback..."
-            mpv --hwdec=no --vo=gpu --gpu-api=opengl --ytdl-format="$format_spec" "$video_url"
+            mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 --ytdl-format="$format_spec" "$video_url"
         else
             echo "Warning: YouTube blocked format $format_spec."
             # Extract height from resolution (e.g., "1920x1080" -> "1080")
@@ -251,10 +251,10 @@ if [ -n "$selected_format" ] && [ "$selected_format" != "$header" ]; then
                 echo "Falling back to best quality up to ${height}p that includes audio..."
                 fallback_spec="best[height<=${height}]"
                 echo "Using fallback format: $fallback_spec"
-                mpv --hwdec=no --vo=gpu --gpu-api=opengl --ytdl-format="$fallback_spec" "$video_url"
+                mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 --ytdl-format="$fallback_spec" "$video_url"
             else
                 echo "Using best available quality..."
-                mpv --hwdec=no --vo=gpu --gpu-api=opengl "$video_url"
+                mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 "$video_url"
             fi
         fi
     else
@@ -265,13 +265,13 @@ if [ -n "$selected_format" ] && [ "$selected_format" != "$header" ]; then
         # Verify the format works before playing
         if yt-dlp --no-warnings $cookie_args -f "$format_spec" --get-url "$video_url" >/dev/null 2>&1; then
             echo "Format verified successfully. Starting playback..."
-            mpv --hwdec=no --vo=gpu --gpu-api=opengl --ytdl-format="$format_spec" "$video_url"
+            mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 --ytdl-format="$format_spec" "$video_url"
         else
             echo "Warning: Format $format_spec failed verification. Using default quality..."
-            mpv --hwdec=no --vo=gpu --gpu-api=opengl "$video_url"
+            mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 "$video_url"
         fi
     fi
 else
     echo "No quality selected. Playing with default quality..."
-    mpv --hwdec=no --vo=gpu --gpu-api=opengl "$video_url"
+    mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 "$video_url"
 fi
