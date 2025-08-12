@@ -1,21 +1,111 @@
 #!/bin/bash
 
-# Enhanced YouTube streaming script with multiple client fallbacks
-if [ "$#" -ne 1 ]; then
-    echo "Usage: $0 <YouTube_URL>"
-    echo "Example: $0 https://www.youtube.com/watch?v=VIDEO_ID"
+# Enhanced YouTube streaming script with cookie support and homepage functionality
+# Usage: $0 [YouTube_URL]
+# If no URL provided, will use YouTube homepage from cookies
+
+# Configuration
+COOKIE_FILE="$HOME/.config/youtube-cookies.txt"
+DEFAULT_HOMEPAGE="https://www.youtube.com"
+
+# Function to check if cookies exist and are valid
+check_cookies() {
+    if [ -f "$COOKIE_FILE" ]; then
+        echo "Found cookie file: $COOKIE_FILE"
+        return 0
+    else
+        echo "Warning: Cookie file not found at $COOKIE_FILE"
+        echo "To use cookies, export them from your browser to: $COOKIE_FILE"
+        return 1
+    fi
+}
+
+# Function to get YouTube homepage/recommendations
+get_homepage_videos() {
+    echo "Fetching YouTube homepage/recommendations..."
+    
+    local cookie_args=""
+    if [ -f "$COOKIE_FILE" ]; then
+        cookie_args="--cookies $COOKIE_FILE"
+    fi
+    
+    # Get homepage videos using yt-dlp
+    local videos=$(yt-dlp $cookie_args --flat-playlist --print "%(title)s|%(id)s|%(uploader)s" "$DEFAULT_HOMEPAGE" 2>/dev/null | head -20)
+    
+    if [ -z "$videos" ]; then
+        echo "Could not fetch homepage videos. Using fallback..."
+        # Fallback to trending videos
+        videos=$(yt-dlp --flat-playlist --print "%(title)s|%(id)s|%(uploader)s" "https://www.youtube.com/feed/trending" 2>/dev/null | head -10)
+    fi
+    
+    if [ -z "$videos" ]; then
+        echo "Error: Could not fetch any videos from YouTube."
+        exit 1
+    fi
+    
+    echo "$videos"
+}
+
+# Handle arguments
+if [ "$#" -eq 0 ]; then
+    echo "No URL provided. Fetching YouTube homepage..."
+    check_cookies
+    
+    # Get homepage videos and let user select
+    videos=$(get_homepage_videos)
+    
+    if [ -z "$videos" ]; then
+        echo "Failed to fetch homepage videos."
+        exit 1
+    fi
+    
+    # Format videos for selection
+    formatted_videos=""
+    while IFS='|' read -r title video_id uploader; do
+        if [ -n "$title" ] && [ -n "$video_id" ]; then
+            formatted_videos="$formatted_videos\n$title | $uploader | https://youtu.be/$video_id"
+        fi
+    done <<< "$videos"
+    
+    # Use fzf to select video
+    selected_video=$(echo -e "$formatted_videos" | 
+        fzf --height 70% \
+            --reverse \
+            --header "Select a video from YouTube homepage:" \
+            --preview "echo 'Video: {1}\nUploader: {2}\nURL: {3}'" \
+            --preview-window=down:3:wrap \
+            --delimiter=" | ")
+    
+    if [ -z "$selected_video" ]; then
+        echo "No video selected. Exiting."
+        exit 0
+    fi
+    
+    # Extract URL from selection
+    video_url=$(echo "$selected_video" | awk -F' | ' '{print $3}')
+    echo "Selected: $video_url"
+elif [ "$#" -eq 1 ]; then
+    video_url="$1"
+else
+    echo "Usage: $0 [YouTube_URL]"
+    echo "Examples:"
+    echo "  $0                                          # Browse YouTube homepage"
+    echo "  $0 https://www.youtube.com/watch?v=VIDEO_ID  # Play specific video"
     exit 1
 fi
-
-video_url="$1"
 
 # Function to test format with different clients
 test_format_with_clients() {
     local format="$1"
     local clients=("web" "android" "ios" "tv" "android_creator" "mediaconnect")
     
+    local cookie_args=""
+    if [ -f "$COOKIE_FILE" ]; then
+        cookie_args="--cookies $COOKIE_FILE"
+    fi
+    
     for client in "${clients[@]}"; do
-        if yt-dlp --no-warnings --extractor-args "youtube:player_client=$client" -f "$format" --get-url "$video_url" >/dev/null 2>&1; then
+        if yt-dlp --no-warnings $cookie_args --extractor-args "youtube:player_client=$client" -f "$format" --get-url "$video_url" >/dev/null 2>&1; then
             echo "$client"
             return 0
         fi
@@ -28,23 +118,34 @@ get_formats_with_client() {
     local clients=("web" "android" "ios" "tv" "android_creator")
     local working_client="web"
     
+    local cookie_args=""
+    if [ -f "$COOKIE_FILE" ]; then
+        cookie_args="--cookies $COOKIE_FILE"
+    fi
+    
     # Find the first working client
     for client in "${clients[@]}"; do
-        if yt-dlp --list-formats --no-warnings --extractor-args "youtube:player_client=$client" "$video_url" >/dev/null 2>&1; then
+        if yt-dlp --list-formats --no-warnings $cookie_args --extractor-args "youtube:player_client=$client" "$video_url" >/dev/null 2>&1; then
             working_client="$client"
             echo "Using $client client for format discovery..." >&2
             break
         fi
     done
     
-    yt-dlp --list-formats --no-warnings --extractor-args "youtube:player_client=$working_client" "$video_url" 2>/dev/null
+    yt-dlp --list-formats --no-warnings $cookie_args --extractor-args "youtube:player_client=$working_client" "$video_url" 2>/dev/null
 }
 
 echo "Fetching available video qualities with multiple client fallbacks..."
 echo "Testing YouTube clients: web, android, ios, tv, android_creator..."
 
+# Prepare cookie arguments
+cookie_args=""
+if [ -f "$COOKIE_FILE" ]; then
+    cookie_args="--cookies $COOKIE_FILE"
+fi
+
 # Get all video formats (including video-only) with better formatting
-formats=$(yt-dlp --list-formats --no-warnings "$video_url" 2>/dev/null | 
+formats=$(yt-dlp --list-formats --no-warnings $cookie_args "$video_url" 2>/dev/null |
     awk '/^[0-9]+/ {
         # Skip audio-only formats
         if ($0 !~ /audio only/) {
@@ -139,7 +240,7 @@ if [ -n "$selected_format" ] && [ "$selected_format" != "$header" ]; then
         echo "Testing format: $format_spec"
         
         # Verify the format works before playing
-        if yt-dlp --no-warnings -f "$format_spec" --get-url "$video_url" >/dev/null 2>&1; then
+        if yt-dlp --no-warnings $cookie_args -f "$format_spec" --get-url "$video_url" >/dev/null 2>&1; then
             echo "Format combination successful. Starting playback..."
             mpv --hwdec=no --vo=gpu --gpu-api=opengl --ytdl-format="$format_spec" "$video_url"
         else
@@ -162,7 +263,7 @@ if [ -n "$selected_format" ] && [ "$selected_format" != "$header" ]; then
         echo "Using format: $format_spec"
         
         # Verify the format works before playing
-        if yt-dlp --no-warnings -f "$format_spec" --get-url "$video_url" >/dev/null 2>&1; then
+        if yt-dlp --no-warnings $cookie_args -f "$format_spec" --get-url "$video_url" >/dev/null 2>&1; then
             echo "Format verified successfully. Starting playback..."
             mpv --hwdec=no --vo=gpu --gpu-api=opengl --ytdl-format="$format_spec" "$video_url"
         else

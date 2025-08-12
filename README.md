@@ -24,6 +24,8 @@
 <td width="50%">
 
 ### 🎯 **Core Functionality**
+- 🍪 **Cookie support** for authenticated access and personalized content
+- 🏠 **Homepage browsing** when no URL provided
 - 🔄 **Multiple client fallbacks** (web, android, ios, tv)
 - 🎛️ **Interactive quality selection** with fzf
 - 📺 **Direct MPV integration** with hardware acceleration
@@ -109,9 +111,36 @@ pip3 install yt-dlp
 yt-dlp --version && mpv --version && fzf --version
 ```
 
+## 🍪 Cookie Setup (Optional but Recommended)
+
+To bypass YouTube restrictions and access personalized content, set up browser cookies:
+
+### Method 1: Browser Extension (Recommended)
+1. Install a cookie exporter extension:
+   - **Chrome/Edge**: "Get cookies.txt LOCALLY" or "cookies.txt"
+   - **Firefox**: "cookies.txt" or "Export Cookies"
+
+2. Navigate to YouTube and log in to your account
+3. Export cookies for youtube.com to Netscape format
+4. Save the exported cookies to: `~/.config/youtube-cookies.txt`
+
+### Method 2: Manual Export
+1. Open Developer Tools (F12) on YouTube
+2. Go to Application/Storage tab → Cookies → https://www.youtube.com
+3. Copy all cookies and format them as Netscape cookie file
+4. Save to `~/.config/youtube-cookies.txt`
+
 ## 💻 Usage
 
-### Basic Usage
+### Browse YouTube Homepage
+```bash
+# Browse your YouTube homepage/recommendations (requires cookies)
+./youtube-stream.sh
+
+# Falls back to trending videos if no cookies available
+```
+
+### Stream Specific Videos
 
 ```bash
 # Stream a YouTube video with quality selection
