@@ -8,6 +8,56 @@
 COOKIE_FILE="$HOME/.config/youtube-cookies.txt"
 DEFAULT_HOMEPAGE="https://www.youtube.com"
 
+# YouTube 403 error mitigation settings
+USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+REFERER="https://www.youtube.com/"
+
+# Function to get enhanced yt-dlp arguments for 403 mitigation
+get_enhanced_ytdlp_args() {
+    local cookie_args=""
+    if [ -f "$COOKIE_FILE" ]; then
+        cookie_args="--cookies $COOKIE_FILE"
+    fi
+    
+    echo "$cookie_args --user-agent '$USER_AGENT' --add-header 'Referer:$REFERER' --sleep-requests 1 --sleep-subtitles 1"
+}
+
+# Function to try multiple extraction methods for 403 errors
+try_multiple_extraction_methods() {
+    local video_url="$1"
+    local format="$2"
+    local enhanced_args=$(get_enhanced_ytdlp_args)
+    
+    echo "Trying multiple extraction methods to bypass 403 errors..."
+    
+    # Method 1: Enhanced headers with different clients
+    local clients=("web" "android" "ios" "tv")
+    for client in "${clients[@]}"; do
+        echo "Trying $client client with enhanced headers..."
+        if yt-dlp --no-warnings $enhanced_args --extractor-args "youtube:player_client=$client" -f "$format" --get-url "$video_url" >/dev/null 2>&1; then
+            echo "Success with $client client!"
+            return 0
+        fi
+        sleep 2  # Rate limiting
+    done
+    
+    # Method 2: Try with different format selection
+    echo "Trying alternative format selection..."
+    if yt-dlp --no-warnings $enhanced_args -f "worst+bestaudio/worst" --get-url "$video_url" >/dev/null 2>&1; then
+        echo "Success with alternative format!"
+        return 0
+    fi
+    
+    # Method 3: Try basic extraction without format specification
+    echo "Trying basic extraction..."
+    if yt-dlp --no-warnings $enhanced_args --get-url "$video_url" >/dev/null 2>&1; then
+        echo "Success with basic extraction!"
+        return 0
+    fi
+    
+    return 1
+}
+
 # Function to check if cookies exist and are valid
 check_cookies() {
     if [ -f "$COOKIE_FILE" ]; then
@@ -137,8 +187,17 @@ get_formats_with_client() {
 
 # Check if AUTO mode is requested via stdin
 if read -t 0.1 auto_selection && [ "$auto_selection" = "AUTO" ]; then
-    echo "AUTO mode detected. Using best available quality..."
-    mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 --ytdl-format="bestvideo+bestaudio/best" "$video_url"
+    echo "AUTO mode detected. Using best available quality with 403 mitigation..."
+    enhanced_args=$(get_enhanced_ytdlp_args)
+    
+    # Try enhanced extraction first
+    if try_multiple_extraction_methods "$video_url" "bestvideo+bestaudio/best"; then
+        echo "Extraction successful! Starting playback..."
+        mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 --ytdl-format="bestvideo+bestaudio/best" --ytdl-raw-options=cookies="$COOKIE_FILE",user-agent="$USER_AGENT",add-header="Referer:$REFERER" "$video_url"
+    else
+        echo "Enhanced extraction failed. Trying basic playback..."
+        mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 "$video_url"
+    fi
     exit 0
 fi
 
