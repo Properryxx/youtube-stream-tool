@@ -195,6 +195,37 @@ Automatic fallback through multiple YouTube clients:
 ## 🐛 Troubleshooting
 
 <details>
+<summary><strong>🚫 HTTP 403 Forbidden Errors</strong></summary>
+
+**Problem:** YouTube is blocking video access with "HTTP error 403 Forbidden"
+
+**Solutions (in order of effectiveness):**
+1. **Update yt-dlp to latest version:**
+   ```bash
+   pipx upgrade yt-dlp  # or pip install --user --upgrade yt-dlp
+   ```
+
+2. **Set up browser cookies** (most effective):
+   - Export cookies from your browser using extensions like "Get cookies.txt"
+   - Save to `~/.config/youtube-cookies.txt`
+   - The script will automatically use them for authentication
+
+3. **Try different video URLs:**
+   - Some videos are geo-blocked or have stricter access controls
+   - Try removing URL parameters (everything after `?`)
+   - Test with a different YouTube video
+
+4. **Wait and retry:**
+   - YouTube may temporarily block your IP due to rate limiting
+   - Wait 10-15 minutes before trying again
+   - The script includes automatic rate limiting to help with this
+
+5. **Use VPN (last resort):**
+   - YouTube may be blocking your geographic region or IP range
+   - Try connecting from a different location
+</details>
+
+<details>
 <summary><strong>🚫 "Could not fetch video formats"</strong></summary>
 
 **Solution:**
