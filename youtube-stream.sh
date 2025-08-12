@@ -135,6 +135,13 @@ get_formats_with_client() {
     yt-dlp --list-formats --no-warnings $cookie_args --extractor-args "youtube:player_client=$working_client" "$video_url" 2>/dev/null
 }
 
+# Check if AUTO mode is requested via stdin
+if read -t 0.1 auto_selection && [ "$auto_selection" = "AUTO" ]; then
+    echo "AUTO mode detected. Using best available quality..."
+    mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 --ytdl-format="bestvideo+bestaudio/best" "$video_url"
+    exit 0
+fi
+
 echo "Fetching available video qualities with multiple client fallbacks..."
 echo "Testing YouTube clients: web, android, ios, tv, android_creator..."
 
@@ -219,14 +226,26 @@ if [ -n "$selected_format" ] && [ "$selected_format" != "$header" ]; then
     # Extract format ID (first column)
     format_id=$(echo "$selected_format" | awk '{print $1}')
     
-    # Handle special options
+# Handle special options
     if [ "$format_id" = "AUTO" ]; then
         echo "Using best available quality (automatic selection)..."
-        mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 "$video_url"
+        # Try bestaudio+bestvideo combination first, then fallback
+        if mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 --ytdl-format="bestvideo+bestaudio/best" "$video_url" 2>/dev/null; then
+            exit 0
+        else
+            echo "Fallback: Trying basic format..."
+            mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 "$video_url"
+        fi
         exit 0
     elif [ "$format_id" = "BEST" ]; then
         echo "Using best available quality up to 1080p with audio..."
-        mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 --ytdl-format="best[height<=1080]" "$video_url"
+        # Try with explicit audio combination
+        if mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 --ytdl-format="bestvideo[height<=1080]+bestaudio/best[height<=1080]" "$video_url" 2>/dev/null; then
+            exit 0
+        else
+            echo "Fallback: Trying simpler format..."
+            mpv --hwdec=no --vo=gpu --gpu-api=opengl --ao=pipewire --volume=80 --ytdl-format="best[height<=1080]" "$video_url"
+        fi
         exit 0
     fi
     
